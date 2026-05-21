@@ -1,0 +1,5 @@
+\project_{name} customer \diff \project_{name} (
+    ((\project_{name} customer) \cross (\project_{type} loan))
+    \diff
+    \rename_{name, type} (\project_{cname, type} (borrower \join_{lno = no} loan))
+);
