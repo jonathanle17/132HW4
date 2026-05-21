@@ -1,31 +1,37 @@
--- Step 1: Calculate distinct borrower counts for active loan types
-ActiveCounts = \rename_{type, cnt} (
-    \aggr_{type: count(cname)} (
-        \project_{cname, type} (borrower \join_{lno = no} loan)
+\rename_{loanType} (
+    \project_{type} (
+        -- Master list of TypeCounts (Left side of Join)
+        (
+            \rename_{type, cnt} (\aggr_{type: count(cname)} (\project_{cname, type} (borrower \join_{lno = no} loan)))
+            \union
+            \rename_{type, cnt} (\project_{type, 0} (\project_{type} loan \diff \project_{type} (borrower \join_{lno = no} loan)))
+        )
+        \join_{cnt = c1}
+        -- The isolated Minimum Count (Right side of Join)
+        (
+            -- All Counts
+            \rename_{c1} (\project_{cnt} (
+                \rename_{type, cnt} (\aggr_{type: count(cname)} (\project_{cname, type} (borrower \join_{lno = no} loan)))
+                \union
+                \rename_{type, cnt} (\project_{type, 0} (\project_{type} loan \diff \project_{type} (borrower \join_{lno = no} loan)))
+            ))
+            \diff
+            -- Minus Counts that are NOT the minimum
+            \project_{c1} (
+                \select_{c1 > c2} (
+                    \rename_{t1, c1} (
+                        \rename_{type, cnt} (\aggr_{type: count(cname)} (\project_{cname, type} (borrower \join_{lno = no} loan)))
+                        \union
+                        \rename_{type, cnt} (\project_{type, 0} (\project_{type} loan \diff \project_{type} (borrower \join_{lno = no} loan)))
+                    )
+                    \cross
+                    \rename_{t2, c2} (
+                        \rename_{type, cnt} (\aggr_{type: count(cname)} (\project_{cname, type} (borrower \join_{lno = no} loan)))
+                        \union
+                        \rename_{type, cnt} (\project_{type, 0} (\project_{type} loan \diff \project_{type} (borrower \join_{lno = no} loan)))
+                    )
+                )
+            )
+        )
     )
-);
-
--- Step 2: Identify loan types with 0 borrowers (to prevent omitting them)
-ZeroCounts = \rename_{type, cnt} (
-    \project_{type, 0} (
-        \project_{type} loan \diff \project_{type} (borrower \join_{lno = no} loan)
-    )
-);
-
--- Step 3: Combine them into a master list of all counts
-TypeCounts = ActiveCounts \union ZeroCounts;
-
--- Step 4: Find all counts that are NOT the minimum (because a smaller count exists)
-NotMinCounts = \project_{c1} (
-    \select_{c1 > c2} (
-        \rename_{t1, c1} TypeCounts \cross \rename_{t2, c2} TypeCounts
-    )
-);
-
--- Step 5: Subtract the "Not Min" counts from All counts to isolate the absolute minimum
-MinCount = \rename_{c1} (\project_{cnt} TypeCounts) \diff NotMinCounts;
-
--- Step 6: Join the minimum count back to the master list to get the matching loan types
-Answer = \rename_{loanType} (
-    \project_{type} (TypeCounts \join_{cnt = c1} MinCount)
-);
+)
