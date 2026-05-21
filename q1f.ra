@@ -1,0 +1,43 @@
+(
+    \select_{name1 < name2} (
+        \rename_{name1} (\project_{name} customer) 
+        \cross 
+        \rename_{name2} (\project_{name} customer)
+    )
+    \diff
+    \project_{name1, name2} (
+        \rename_{name1, name2, lno} (
+            \project_{name1, name2, lno1} (
+                ( \select_{name1 < name2} (\rename_{name1} (\project_{name} customer) \cross \rename_{name2} (\project_{name} customer)) ) 
+                \join_{name1 = bn1} 
+                ( \rename_{bn1, lno1} (\project_{cname, lno} borrower) )
+            )
+        )
+        \diff
+        \rename_{name1, name2, lno} (
+            \project_{name1, name2, lno2} (
+                ( \select_{name1 < name2} (\rename_{name1} (\project_{name} customer) \cross \rename_{name2} (\project_{name} customer)) ) 
+                \join_{name2 = bn2} 
+                ( \rename_{bn2, lno2} (\project_{cname, lno} borrower) )
+            )
+        )
+    )
+)
+\diff
+\project_{name1, name2} (
+    \rename_{name1, name2, lno} (
+        \project_{name1, name2, lno2} (
+            ( \select_{name1 < name2} (\rename_{name1} (\project_{name} customer) \cross \rename_{name2} (\project_{name} customer)) ) 
+            \join_{name2 = bn2} 
+            ( \rename_{bn2, lno2} (\project_{cname, lno} borrower) )
+        )
+    )
+    \diff
+    \rename_{name1, name2, lno} (
+        \project_{name1, name2, lno1} (
+            ( \select_{name1 < name2} (\rename_{name1} (\project_{name} customer) \cross \rename_{name2} (\project_{name} customer)) ) 
+            \join_{name1 = bn1} 
+            ( \rename_{bn1, lno1} (\project_{cname, lno} borrower) )
+        )
+    )
+);
