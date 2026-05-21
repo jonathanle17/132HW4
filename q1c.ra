@@ -1,22 +1,18 @@
 \rename_{loanType} (
     \project_{type} (
-        -- Master list of TypeCounts (Left side of Join)
         (
             \rename_{type, cnt} (\aggr_{type: count(cname)} (\project_{cname, type} (borrower \join_{lno = no} loan)))
             \union
             \rename_{type, cnt} (\project_{type, 0} (\project_{type} loan \diff \project_{type} (borrower \join_{lno = no} loan)))
         )
         \join_{cnt = c1}
-        -- The isolated Minimum Count (Right side of Join)
         (
-            -- All Counts
             \rename_{c1} (\project_{cnt} (
                 \rename_{type, cnt} (\aggr_{type: count(cname)} (\project_{cname, type} (borrower \join_{lno = no} loan)))
                 \union
                 \rename_{type, cnt} (\project_{type, 0} (\project_{type} loan \diff \project_{type} (borrower \join_{lno = no} loan)))
             ))
             \diff
-            -- Minus Counts that are NOT the minimum
             \project_{c1} (
                 \select_{c1 > c2} (
                     \rename_{t1, c1} (
@@ -34,4 +30,4 @@
             )
         )
     )
-)
+);
