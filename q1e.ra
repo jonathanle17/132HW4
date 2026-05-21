@@ -1,0 +1,17 @@
+\project_{no} (
+    \select_{cnt > avg_cnt} (
+        \rename_{no, l_type, cnt} (
+            \rename_{no, type, cnt} (\aggr_{no, type: count(cname)} (borrower \join_{lno = no} loan))
+            \union
+            \rename_{no, type, cnt} (\project_{no, type, 0} (\project_{no, type} loan \diff \project_{no, type} (borrower \join_{lno = no} loan)))
+        )
+        \join_{l_type = t_type}
+        \rename_{t_type, avg_cnt} (
+            \aggr_{type: avg(cnt)} (
+                \rename_{no, type, cnt} (\aggr_{no, type: count(cname)} (borrower \join_{lno = no} loan))
+                \union
+                \rename_{no, type, cnt} (\project_{no, type, 0} (\project_{no, type} loan \diff \project_{no, type} (borrower \join_{lno = no} loan)))
+            )
+        )
+    )
+);
